@@ -51,7 +51,6 @@
           Add Task
         </button>
       </div>
-      <!-- Todo: Create a modal with a form to add tasks -->
       <!-- Modal -->
       <div
         class="modal fade"
@@ -72,7 +71,7 @@
               ></button>
             </div>
             <div class="modal-body">
-              <form class="container">
+              <form class="container" id="task-form">
                 <div class="row">
                   <div class="col-6">
                     <div class="mb-3">
@@ -106,13 +105,16 @@
                       <textarea
                         rows="3"
                         class="form-control"
-                        placeholder="Description about the task...."
                         id="task-description"
                       ></textarea>
                     </div>
                   </div>
                   <div class="col-4 mx-auto">
-                    <button type="submit" class="btn btn-success">
+                    <button
+                      type="submit"
+                      data-bs-dismiss="modal"
+                      class="btn btn-success"
+                    >
                       Add Task
                     </button>
                   </div>
@@ -129,7 +131,20 @@
               <h2 class="card-title mb-1">To Do</h2>
             </div>
             <div class="card-body bg-light">
-              <div id="todo-cards"></div>
+              <div id="todo-cards">
+                <!-- Todo cards -->
+                <!-- <article
+                  class="card project-card draggable my-3"
+                  data-project-id="1"
+                >
+                  <h4 class="card-header">Featured</h4>
+                  <div class="card-body">
+                    <p class="card-text">One</p>
+                    <p class="card-text">11/18/1994</p>
+                    <button class="btn btn-danger">Delete</button>
+                  </div>
+                </article> -->
+              </div>
             </div>
           </div>
         </div>
