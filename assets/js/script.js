@@ -32,7 +32,7 @@ function createTaskCard(task) {
   let article = $("<article></article");
 
   //add classes and data attribute to the article
-  article.addClass("card project-card draggable my-3");
+  article.addClass("card task-card draggable my-3");
   article.attr("data-project-id", task.id);
 
   //create and append header
@@ -59,7 +59,11 @@ function createTaskCard(task) {
 }
 
 // Todo: create a function to render the task list and make cards draggable
-function renderTaskList() {}
+function renderTaskList() {
+  for (task of taskList) {
+    createTaskCard(task);
+  }
+}
 
 // Todo: create a function to handle adding a new task
 function handleAddTask(event) {
