@@ -1,4 +1,3 @@
-// Retrieve tasks and nextId from localStorage
 let taskList = JSON.parse(localStorage.getItem("tasks"));
 let nextId = JSON.parse(localStorage.getItem("nextId"));
 
@@ -18,47 +17,37 @@ const doneCardsEl = $("#done-cards");
 // Todo: create a function to generate a unique task id
 function generateTaskId() {
   //if we have nextId in the localStorage we add "1" for other created task else we assign "1" for the id
-
   nextId = nextId === null ? 1 : nextId + 1;
-
   localStorage.setItem("nextId", JSON.stringify(nextId));
-
   return nextId;
 }
 
 // Todo: create a function to create a task card
 function createTaskCard(task) {
-  //create the article element
-  let article = $("<article></article");
+  // Create the article element
+  const article = $("<article>").addClass("card task-card draggable my-3");
 
-  //add classes and data attribute to the article
-  article.addClass("card task-card draggable my-3 ");
-  article.attr("data-project-id", task.id);
+  article.attr("data-project-id", `${task.id}`);
 
-  //create and append header
-  let header = $("<h4></h4>").addClass("card-header").text(task.title);
+  // Create the header element and append it to the article
+  const header = $("<h4>").addClass("card-header").text(`${task.title}`);
   article.append(header);
 
-  // Create and append the card body
-  let cardBody = $("<div></div>").addClass("card-body");
-  article.append(cardBody);
+  // Create the div element for card body and append it to the article
+  const cardBody = $("<div>").addClass("card-body");
 
-  // Create and append the paragraph elements
-  let paragraph1 = $("<p></p>").addClass("card-text").text(task.description);
-  let paragraph2 = $("<p></p>").addClass("card-text").text(task.dueDate);
-  cardBody.append(paragraph1, paragraph2);
+  // Create and append the card text paragraphs
+  cardBody.append($("<p>").addClass("card-text").text(`${task.description}`));
+  cardBody.append($("<p>").addClass("card-text").text(`${task.dueDate}`));
 
   // Create and append the delete button
-  let deleteBtn = $("<button></button>")
-    .addClass("btn btn-danger")
-    .text("Delete");
+  const deleteBtn = $("<button>").addClass("btn btn-danger").text("Delete");
   cardBody.append(deleteBtn);
 
-  todoCardEl.append(article);
+  // Append the card body to the article
+  article.append(cardBody);
 
-  /* 
-  Sets the card background color based on due date. Only apply the styles if the dueDate exists and the status is not done.
-  */
+  // Sets the card background color based on due date. Only apply the styles if the dueDate exists and the status is not done.
   if (task.dueDate && task.status !== "done") {
     //getting the present time using dayjs()
     const now = dayjs();
@@ -75,7 +64,40 @@ function createTaskCard(task) {
     }
   }
 
-  $(".task-card").draggable({
+  return article;
+}
+
+// Todo: create a function to render the task list and make cards draggable
+function renderTaskList() {
+  // ? Empty existing project cards out of the lanes
+
+  todoCardEl.empty();
+  inProgressCardEl.empty();
+  doneCardsEl.empty();
+
+  //if local storage in empty i.e. null, we return empty array to prevent error in looping the array which is not there
+  if (taskList === null) {
+    return [];
+  }
+
+  let dataFromStorage = JSON.parse(localStorage.getItem("tasks"));
+
+  //if there is tasks present in the local storage, we loop over and create card for each and post it in the DOM
+  for (data of dataFromStorage) {
+    if (data.status === "in-progress") {
+      let progressCard = createTaskCard(data);
+      inProgressCardEl.append(progressCard);
+    } else if (data.status === "done") {
+      let doneCard = createTaskCard(data);
+      doneCardsEl.append(doneCard);
+    } else {
+      let todoCard = createTaskCard(data);
+      todoCardEl.append(todoCard);
+    }
+  }
+
+  //making each card draggable using jquery UI draggable widget
+  $(".draggable").draggable({
     opacity: 0.7,
     zIndex: 100,
     // ? This is the function that creates the clone of the card that is dragged. This is purely visual and does not affect the data.
@@ -90,22 +112,6 @@ function createTaskCard(task) {
       });
     },
   });
-
-  return article;
-}
-
-// Todo: create a function to render the task list and make cards draggable
-function renderTaskList() {
-  //if local storage in empty i.e. null, we return empty array to prevent error in looping the array
-  if (taskList === null) {
-    return [];
-  }
-
-  //if there is tasks present in the local storage, we loop over and create card for each and post it in the DOM
-  for (task of taskList) {
-    let card = createTaskCard(task);
-    todoCardEl.append(card);
-  }
 }
 
 // Todo: create a function to handle adding a new task
@@ -117,7 +123,7 @@ function handleAddTask(event) {
     let id = generateTaskId();
 
     //creating a task object with all the values taken from the form
-    let newTask = {
+    let newTodo = {
       id,
       title: taskTitle.val(),
       dueDate: taskDueDate.val(),
@@ -125,18 +131,18 @@ function handleAddTask(event) {
       status: "to-do",
     };
 
-    createTaskCard(newTask);
-
     //if there is nothing initially in the local storage, we assign an empty array to the task list
     if (taskList === null) {
       taskList = [];
     }
 
-    //then we push the newly created task in the local storage
-    taskList.push(newTask);
+    //then we push the newly created todo in the array taken from local storage
+    taskList.push(newTodo);
 
-    //finally pushing the latest array in the local storage by stringifying it
     localStorage.setItem("tasks", JSON.stringify(taskList));
+
+    let card = createTaskCard(newTodo);
+    todoCardEl.append(card);
 
     //resetting the input field after we add a task
     taskTitle.val("");
@@ -152,20 +158,15 @@ function handleDeleteTask(event) {}
 
 // Todo: create a function to handle dropping a task into a new status lane
 function handleDrop(event, ui) {
-  console.log(event, ui);
-  // ? Get the project id from the event
-  const taskId = ui.draggable[0].dataset.projectId;
+  for (const task of taskList) {
+    let laneId = event.target.id;
+    let activeCardId = Number(ui.draggable[0].dataset.projectId);
 
-  // ? Get the id of the lane that the card was dropped into
-  const newStatus = event.target.id;
-
-  for (let task of taskList) {
-    // ? Find the project card by the `id` and update the project status.
-    if (task.id === taskId) {
-      task.status = newStatus;
+    if (task.id === activeCardId) {
+      task.status = laneId;
     }
   }
-  // ? Save the updated projects array to localStorage (overwritting the previous one) and render the new project data to the screen.
+
   localStorage.setItem("tasks", JSON.stringify(taskList));
 }
 
@@ -175,7 +176,6 @@ function handleDrag(e) {
   const original = $(e.target).hasClass("draggable")
     ? $(e.target)
     : $(e.target).closest(".draggable");
-  console.log(original);
 
   return original.clone().css({
     width: original.outerWidth(),
@@ -183,12 +183,18 @@ function handleDrag(e) {
 }
 
 // Event handlers
-form.on("submit", handleAddTask);
+function eventHandlers() {
+  form.on("submit", handleAddTask);
+}
 
 // Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
+
 $(document).ready(function () {
   //rendering taskList on page load if there is any
   renderTaskList();
+
+  //function that has event handlers
+  eventHandlers();
 
   //converting date input into jquery date picker ui widget
   $("#task-due-date").datepicker({
@@ -196,7 +202,7 @@ $(document).ready(function () {
     changeYear: true,
   });
 
-  //making lanes droppable
+  // making lanes droppable
   $(".lane").droppable({
     accept: ".draggable",
     drop: handleDrop,
