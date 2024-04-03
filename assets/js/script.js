@@ -168,20 +168,23 @@ function handleAddTask(event) {
 // Todo: create a function to handle deleting a task
 function handleDeleteTask(card) {
   //once we get the clicked card, we get it's project-id number to delete it from the local storage as well
-  let cardId = card.attr("data-project-id");
+  let cardIdToRemove = card.attr("data-project-id");
 
-  //parsing the cardId to make sure its a number
-  cardId = parseInt(cardId);
+  //parsing the cardIdToRemove to make sure its a number
+  cardIdToRemove = parseInt(cardIdToRemove);
 
   // once we recieved the clicked card , we simply remove it from the DOM
   card.remove();
 
-  //also removing it from the localstorage
-  if (taskList) {
-    taskList = taskList.filter(function (task) {
-      return task.id !== cardId;
-    });
-    localStorage.setItem("tasks", JSON.stringify(taskList));
+  //removing from the local storage
+  taskList = taskList.filter(function (task) {
+    return task.id !== cardIdToRemove;
+  });
+  localStorage.setItem("tasks", JSON.stringify(taskList));
+
+  //if all the tasks are being deleted, then we completely remove the nextId item from localstorage and start again
+  if (taskList.length === 0) {
+    localStorage.removeItem("nextId");
   }
 }
 
@@ -196,6 +199,7 @@ function handleDrop(event, ui) {
     }
   }
 
+  //updating the localstorage after the change
   localStorage.setItem("tasks", JSON.stringify(taskList));
 
   renderTaskList();
